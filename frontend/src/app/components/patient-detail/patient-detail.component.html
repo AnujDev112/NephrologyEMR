@@ -1,0 +1,152 @@
+@if (loading) {
+  <p>Loading patient record...</p>
+}
+@if (error) {
+  <p class="error">{{ error }}</p>
+}
+
+@if (patient) {
+  <div class="card">
+    <h2>{{ patient.name }}</h2>
+    <p>
+      {{ patient.age }} yrs &middot; {{ patient.gender }} &middot;
+      <strong>{{ patient.primary_diagnosis || 'No primary diagnosis recorded' }}</strong>
+    </p>
+  </div>
+
+  <div class="tabs">
+    <button [class.active]="activeTab === 'overview'" (click)="setTab('overview')">Overview</button>
+    <button [class.active]="activeTab === 'encounters'" (click)="setTab('encounters')">Encounters</button>
+    <button [class.active]="activeTab === 'labs'" (click)="setTab('labs')">Lab Results</button>
+    <button [class.active]="activeTab === 'ai'" (click)="setTab('ai')">AI Clinical Assistant</button>
+  </div>
+
+  @if (activeTab === 'overview') {
+    <div class="card">
+      <h3>Demographics & History</h3>
+      <p><strong>Date of Birth:</strong> {{ patient.date_of_birth }}</p>
+      <p><strong>Contact:</strong> {{ patient.contact_number || 'n/a' }}</p>
+      <p><strong>Medical History:</strong> {{ patient.medical_history || 'None recorded' }}</p>
+    </div>
+
+    <div class="card">
+      <h3>Comorbidities & Established Diagnoses</h3>
+      @if (patient.conditions.length) {
+        <ul>
+          @for (c of patient.conditions; track c.id) {
+            <li>{{ c.name }} <span *ngIf="c.diagnosed_date">(since {{ c.diagnosed_date }})</span> {{ c.notes }}</li>
+          }
+        </ul>
+      } @else {
+        <p>None recorded.</p>
+      }
+    </div>
+
+    <div class="card">
+      <h3>Current Medications</h3>
+      @if (patient.medications.length) {
+        <ul>
+          @for (m of patient.medications; track m.id) {
+            <li>{{ m.name }} — {{ m.dosage }} {{ m.frequency }} <span *ngIf="!m.active">(inactive)</span></li>
+          }
+        </ul>
+      } @else {
+        <p>None recorded.</p>
+      }
+    </div>
+
+    <div class="card">
+      <h3>Allergies</h3>
+      @if (patient.allergies.length) {
+        <ul>
+          @for (a of patient.allergies; track a.id) {
+            <li>{{ a.substance }} — {{ a.reaction }} ({{ a.severity }})</li>
+          }
+        </ul>
+      } @else {
+        <p>None recorded.</p>
+      }
+    </div>
+  }
+
+  @if (activeTab === 'encounters') {
+    <div class="card">
+      <h3>New Encounter</h3>
+      <app-encounter-form [patientId]="patientId" (saved)="onEncounterSaved($event)" />
+    </div>
+
+    <div class="card">
+      <h3>Previous Encounters</h3>
+      @if (!encounters.length) {
+        <p>No encounters recorded yet.</p>
+      }
+      @for (e of encounters; track e.id) {
+        <div class="card" style="background:#f8fafc">
+          <p><strong>{{ e.visit_date }}</strong> — BP {{ e.bp_systolic }}/{{ e.bp_diastolic }}, HR {{ e.heart_rate }}, Temp {{ e.temperature_c }}°C, Weight {{ e.weight_kg }}kg</p>
+          <p><strong>Chief Complaint:</strong> {{ e.chief_complaint || '-' }}</p>
+          <p><strong>Symptoms:</strong> {{ e.symptoms || '-' }}</p>
+          <p><strong>Examination:</strong> {{ e.examination_notes || '-' }}</p>
+          <p><strong>Assessment:</strong> {{ e.assessment || '-' }}</p>
+          <p><strong>Plan:</strong> {{ e.plan || '-' }}</p>
+        </div>
+      }
+    </div>
+  }
+
+  @if (activeTab === 'labs') {
+    <div class="card">
+      <h3>Add Lab Result</h3>
+      <app-lab-form [patientId]="patientId" (saved)="onLabSaved()" />
+    </div>
+
+    <div class="card">
+      <h3>Creatinine / eGFR Trend</h3>
+      <app-lab-chart [labs]="labs" />
+    </div>
+
+    <div class="card">
+      <h3>Lab History</h3>
+      @if (!labs.length) {
+        <p>No lab results recorded yet.</p>
+      } @else {
+        <table class="lab-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              @for (f of labFields; track f) {
+                <th>{{ labFieldLabels[f] }}</th>
+              }
+              <th>CKD Stage</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (lab of labs; track lab.id) {
+              <tr>
+                <td>{{ lab.test_date }}</td>
+                @for (f of labFields; track f) {
+                  <td>
+                    @if (lab[f] !== null && lab[f] !== undefined) {
+                      <span class="badge" [class.abnormal]="isAbnormal(lab, f)" [class.normal]="!isAbnormal(lab, f)">
+                        {{ lab[f] }}
+                      </span>
+                    } @else {
+                      -
+                    }
+                  </td>
+                }
+                <td>{{ lab.ckd_stage || '-' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+
+  @if (activeTab === 'ai') {
+    <div class="card">
+      <h3>AI Clinical Assistant</h3>
+      <app-ai-summary [patientId]="patientId" />
+    </div>
+  }
+}

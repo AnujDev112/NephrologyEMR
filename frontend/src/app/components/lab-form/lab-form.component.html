@@ -1,0 +1,44 @@
+<form class="form-grid" (ngSubmit)="submit()">
+  @if (error) {
+    <p class="error" style="grid-column: span 2">{{ error }}</p>
+  }
+  <label>
+    Test Date
+    <input type="date" name="test_date" [(ngModel)]="lab.test_date" required />
+  </label>
+  <label>
+    Serum Creatinine (mg/dL)
+    <input type="number" step="0.1" name="creatinine" [(ngModel)]="lab.serum_creatinine" />
+  </label>
+  <label>
+    eGFR (mL/min/1.73m²)
+    <input type="number" step="0.1" name="egfr" [(ngModel)]="lab.egfr" />
+  </label>
+  <label>
+    BUN (mg/dL)
+    <input type="number" step="0.1" name="bun" [(ngModel)]="lab.bun" />
+  </label>
+  <label>
+    Potassium (mmol/L)
+    <input type="number" step="0.1" name="potassium" [(ngModel)]="lab.potassium" />
+  </label>
+  <label>
+    Hemoglobin (g/dL)
+    <input type="number" step="0.1" name="hemoglobin" [(ngModel)]="lab.hemoglobin" />
+  </label>
+  <label>
+    Calcium (mg/dL)
+    <input type="number" step="0.1" name="calcium" [(ngModel)]="lab.calcium" />
+  </label>
+  <label>
+    Phosphorus (mg/dL)
+    <input type="number" step="0.1" name="phosphorus" [(ngModel)]="lab.phosphorus" />
+  </label>
+  <label>
+    UACR (mg/g)
+    <input type="number" step="0.1" name="uacr" [(ngModel)]="lab.uacr" />
+  </label>
+  <div style="grid-column: span 2">
+    <button type="submit" [disabled]="saving">Save Lab Result</button>
+  </div>
+</form>

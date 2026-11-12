@@ -1,0 +1,52 @@
+<form class="form-grid" (ngSubmit)="submit()">
+  @if (error) {
+    <p class="error" style="grid-column: span 2">{{ error }}</p>
+  }
+  <label>
+    Visit Date
+    <input type="date" name="visit_date" [(ngModel)]="encounter.visit_date" required />
+  </label>
+  <label>
+    Weight (kg)
+    <input type="number" name="weight" [(ngModel)]="encounter.weight_kg" />
+  </label>
+  <label>
+    BP Systolic
+    <input type="number" name="sys" [(ngModel)]="encounter.bp_systolic" />
+  </label>
+  <label>
+    BP Diastolic
+    <input type="number" name="dia" [(ngModel)]="encounter.bp_diastolic" />
+  </label>
+  <label>
+    Heart Rate (bpm)
+    <input type="number" name="hr" [(ngModel)]="encounter.heart_rate" />
+  </label>
+  <label>
+    Temperature (°C)
+    <input type="number" step="0.1" name="temp" [(ngModel)]="encounter.temperature_c" />
+  </label>
+  <label style="grid-column: span 2">
+    Chief Complaint
+    <textarea name="complaint" [(ngModel)]="encounter.chief_complaint"></textarea>
+  </label>
+  <label style="grid-column: span 2">
+    Symptoms
+    <textarea name="symptoms" [(ngModel)]="encounter.symptoms"></textarea>
+  </label>
+  <label style="grid-column: span 2">
+    Examination Notes
+    <textarea name="exam" [(ngModel)]="encounter.examination_notes"></textarea>
+  </label>
+  <label style="grid-column: span 2">
+    Assessment / Diagnoses
+    <textarea name="assessment" [(ngModel)]="encounter.assessment"></textarea>
+  </label>
+  <label style="grid-column: span 2">
+    Treatment / Follow-up Plan
+    <textarea name="plan" [(ngModel)]="encounter.plan"></textarea>
+  </label>
+  <div style="grid-column: span 2">
+    <button type="submit" [disabled]="saving">Save Encounter</button>
+  </div>
+</form>

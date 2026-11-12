@@ -1,0 +1,39 @@
+<div class="card">
+  <h2>New Patient</h2>
+  @if (error) {
+    <p class="error">{{ error }}</p>
+  }
+  <form class="form-grid" (ngSubmit)="submit()">
+    <label>
+      Full Name
+      <input type="text" name="name" [(ngModel)]="patient.name" required />
+    </label>
+    <label>
+      Date of Birth
+      <input type="date" name="dob" [(ngModel)]="patient.date_of_birth" required />
+    </label>
+    <label>
+      Gender
+      <select name="gender" [(ngModel)]="patient.gender">
+        <option>Female</option>
+        <option>Male</option>
+        <option>Other</option>
+      </select>
+    </label>
+    <label>
+      Contact Number
+      <input type="text" name="contact" [(ngModel)]="patient.contact_number" />
+    </label>
+    <label style="grid-column: span 2">
+      Primary Diagnosis
+      <input type="text" name="diagnosis" [(ngModel)]="patient.primary_diagnosis" />
+    </label>
+    <label style="grid-column: span 2">
+      Medical History Notes
+      <textarea name="history" [(ngModel)]="patient.medical_history"></textarea>
+    </label>
+    <div style="grid-column: span 2">
+      <button type="submit" [disabled]="saving">Save Patient</button>
+    </div>
+  </form>
+</div>

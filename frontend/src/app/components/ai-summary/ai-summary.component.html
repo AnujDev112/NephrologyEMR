@@ -1,0 +1,15 @@
+<button (click)="generate()" [disabled]="loading">
+  {{ loading ? 'Generating...' : 'Generate AI Clinical Summary' }}
+</button>
+
+@if (error) {
+  <p class="error">{{ error }}</p>
+}
+
+@if (result) {
+  <div class="ai-result">
+    <p class="ai-tag">AI-Generated — Model: {{ result.model }} — {{ result.generated_at | date: 'medium' }}</p>
+    <pre>{{ result.summary }}</pre>
+    <p class="disclaimer">{{ result.disclaimer }}</p>
+  </div>
+}

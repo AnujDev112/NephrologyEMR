@@ -1,0 +1,44 @@
+<section class="toolbar">
+  <input
+    type="text"
+    [(ngModel)]="searchTerm"
+    (keyup.enter)="onSearch()"
+    placeholder="Search by name or patient ID..."
+  />
+  <button (click)="onSearch()">Search</button>
+  <a routerLink="/patients/new" class="primary">+ New Patient</a>
+</section>
+
+@if (loading) {
+  <p>Loading patients...</p>
+}
+@if (error) {
+  <p class="error">{{ error }}</p>
+}
+
+<table class="patient-table" *ngIf="!loading && patients.length">
+  <thead>
+    <tr>
+      <th>Patient ID</th>
+      <th>Name</th>
+      <th>Age</th>
+      <th>Gender</th>
+      <th>Primary Diagnosis</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (p of patients; track p.id) {
+      <tr [routerLink]="['/patients', p.id]">
+        <td>{{ p.id }}</td>
+        <td>{{ p.name }}</td>
+        <td>{{ p.age }}</td>
+        <td>{{ p.gender }}</td>
+        <td>{{ p.primary_diagnosis }}</td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+@if (!loading && !patients.length && !error) {
+  <p>No patients found.</p>
+}
