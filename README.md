@@ -7,7 +7,7 @@ and an AI-assisted clinical summary.
 - **Frontend:** Angular 18 (standalone components), TypeScript, Chart.js (via ng2-charts)
 - **Backend:** Python, FastAPI
 - **Database:** SQLite (via SQLAlchemy ORM)
-- **AI:** OpenAI SDK (chat completion), with a documented mock fallback when no API key is configured
+- **AI:** Groq (Free tier, Llama 3.3 70B via GroqCloud) & OpenAI, with a documented mock fallback when no API key is configured
 
 See [architecture.md](architecture.md) for design details and [workflow.md](workflow.md)
 for the user-facing walkthrough of each feature.
@@ -27,13 +27,14 @@ pip install -r requirements.txt
 
 # Optional: enable real AI summaries (otherwise a mock summary is returned)
 cp .env.example .env
-# edit .env and set OPENAI_API_KEY=sk-...
+# edit .env and set GROQ_API_KEY=gsk-... (or OPENAI_API_KEY=sk-...)
 
 # Seed the SQLite database with 4 synthetic patients
 python seed.py
 
 # Run the API (http://localhost:8000)
-uvicorn app.main:app --reload --port 8000
+python run.py
+# (or: python -m uvicorn app.main:app --reload --port 8000)
 ```
 
 Interactive API docs (Swagger UI) are auto-generated at `http://localhost:8000/docs`.
@@ -48,7 +49,7 @@ python -m pytest -q
 
 ```bash
 cd frontend
-npm install
+npm install --legacy-peer-deps
 npm start          # ng serve, http://localhost:4200
 ```
 
@@ -79,7 +80,7 @@ backend/
       reference.py             Reference-range lookup for the frontend
       ai.py                     AI clinical summary endpoint
     services/
-      ai_summary.py             Builds patient context, calls OpenAI, mock fallback
+      ai_summary.py             Builds patient context, calls Groq/OpenAI, mock fallback
   seed.py                     Synthetic patient data loader
   tests/test_api.py             Pytest smoke tests
 

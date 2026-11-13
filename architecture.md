@@ -13,9 +13,9 @@ AI service layer the API calls into for clinical summaries.
 └─────────────────┘                      │  /labs/reference/ai │              └──────────┘
                                           │ services/ai_summary │
                                           └──────────┬──────────┘
-                                                     │ (only when OPENAI_API_KEY set)
+                                                     │ (when GROQ_API_KEY / OPENAI_API_KEY set)
                                                      ▼
-                                            OpenAI Chat Completions API
+                                            Groq (GroqCloud) / OpenAI Chat Completions API
 ```
 
 ## Backend

@@ -102,6 +102,9 @@ def test_create_encounter_and_lab():
 
 def test_ai_summary_mock_fallback(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    monkeypatch.delenv("GROK_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_PROVIDER", raising=False)
     patient = _create_patient()
     resp = client.post(f"/api/patients/{patient['id']}/ai-summary")
     assert resp.status_code == 200
@@ -109,6 +112,18 @@ def test_ai_summary_mock_fallback(monkeypatch):
     assert body["model"] == "mock"
     assert "disclaimer" in body
     assert "MOCK SUMMARY" in body["summary"]
+
+
+def test_groq_client_resolution(monkeypatch):
+    from app.services.ai_summary import _get_client_and_model
+
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_test_key_12345")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    client, model = _get_client_and_model()
+    assert client is not None
+    assert client.api_key == "gsk_test_key_12345"
+    assert "api.groq.com" in str(client.base_url)
+    assert model == "llama-3.3-70b-versatile"
 
 
 def test_ckd_staging():

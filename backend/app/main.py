@@ -1,6 +1,9 @@
 """FastAPI application entrypoint for the Nephrology EMR backend."""
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+load_dotenv()
 
 from app.database import Base, engine
 from app.routers import ai, encounters, labs, patients, reference
