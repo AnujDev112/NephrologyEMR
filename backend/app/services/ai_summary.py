@@ -1,10 +1,10 @@
-"""Builds patient context and calls an LLM to draft a clinical summary.
+"""Builds patient context and calls an LLM (Groq / OpenAI) to draft a clinical summary.
 
 Design notes:
   - Context is built entirely from DB records; nothing is invented here.
-  - If no OPENAI_API_KEY is configured, falls back to a deterministic,
-    clearly-labeled mock summary (per the assignment: "a documented mock
-    implementation" is acceptable where API access is restricted).
+  - Supports GroqCloud (free tier, Llama 3.3 70B / 3.1 8B) and OpenAI via OpenAI-compatible API.
+  - If no GROQ_API_KEY or OPENAI_API_KEY is configured, falls back to a deterministic,
+    clearly-labeled mock summary.
   - The LLM is instructed to only use the supplied context, never to
     diagnose or prescribe, and to flag missing/inconsistent information.
 """
@@ -89,12 +89,54 @@ def _build_context(patient: models.Patient) -> str:
     return "\n".join(lines)
 
 
+def _get_client_and_model() -> tuple[OpenAI | None, str | None]:
+    """Resolve LLM client and model name from environment variables.
+
+    Supports Groq (GroqCloud free tier) and OpenAI.
+    Provider resolution:
+      1. If GROQ_API_KEY (or key starting with 'gsk_') is set -> Groq (llama-3.3-70b-versatile)
+      2. If OPENAI_API_KEY is set -> OpenAI (gpt-4o-mini)
+      3. Otherwise -> None, None (mock fallback)
+    """
+    provider = os.getenv("LLM_PROVIDER", "").strip().lower()
+
+    groq_key = os.getenv("GROQ_API_KEY") or os.getenv("GROK_API_KEY")
+    openai_key = os.getenv("OPENAI_API_KEY")
+
+    if not provider:
+        if groq_key or (openai_key and openai_key.startswith("gsk_")):
+            provider = "groq"
+        elif openai_key:
+            provider = "openai"
+
+    # --- GroqCloud (Free Tier) ---
+    if provider == "groq" or (groq_key and not openai_key):
+        api_key = groq_key or openai_key
+        if not api_key:
+            return None, None
+        base_url = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
+        model = os.getenv("GROQ_MODEL") or os.getenv("GROK_MODEL") or "llama-3.3-70b-versatile"
+        return OpenAI(api_key=api_key, base_url=base_url), model
+
+    # --- OpenAI ---
+    if provider == "openai" or openai_key:
+        api_key = openai_key
+        if not api_key:
+            return None, None
+        base_url = os.getenv("OPENAI_BASE_URL")
+        model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        client = OpenAI(api_key=api_key, base_url=base_url) if base_url else OpenAI(api_key=api_key)
+        return client, model
+
+    return None, None
+
+
 def _mock_summary(patient: models.Patient) -> str:
     """Deterministic fallback used when no LLM API key is configured."""
     latest_lab = patient.lab_results[0] if patient.lab_results else None
     stage = clinical.ckd_stage(latest_lab.egfr) if latest_lab else None
     parts = [
-        "[MOCK SUMMARY - no OPENAI_API_KEY configured, generated without an LLM call]",
+        "[MOCK SUMMARY - no LLM API key configured (GROQ_API_KEY / OPENAI_API_KEY), generated without an LLM call]",
         f"1. Nephrology History Summary: {patient.name} has a primary diagnosis of "
         f"'{patient.primary_diagnosis or 'not recorded'}' with {len(patient.encounters)} "
         f"encounter(s) on file.",
@@ -104,7 +146,7 @@ def _mock_summary(patient: models.Patient) -> str:
         "4. Abnormal Laboratory Findings: see lab table for values flagged outside reference range.",
         "5. Missing or Inconsistent Information: unable to assess without an LLM call; "
         "review the record directly.",
-        "6. Follow-up Considerations for Clinician Review: configure OPENAI_API_KEY to "
+        "6. Follow-up Considerations for Clinician Review: configure GROQ_API_KEY (free at console.groq.com) or OPENAI_API_KEY to "
         "enable full AI-assisted analysis.",
     ]
     return "\n".join(parts)
@@ -112,13 +154,11 @@ def _mock_summary(patient: models.Patient) -> str:
 
 def generate_clinical_summary(patient: models.Patient) -> tuple[str, str]:
     """Return (summary_text, model_name_used)."""
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
+    client, model = _get_client_and_model()
+    if client is None or model is None:
         return _mock_summary(patient), "mock"
 
     context = _build_context(patient)
-    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-    client = OpenAI(api_key=api_key)
 
     try:
         response = client.chat.completions.create(
